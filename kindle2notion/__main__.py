@@ -7,6 +7,9 @@ from kindle2notion.exporting import export_to_notion
 from kindle2notion.parsing import parse_raw_clippings_text
 from kindle2notion.reading import read_raw_clippings
 
+import locale
+locale.setlocale(locale.LC_ALL, 'portuguese-brazilian')
+
 
 @click.command()
 @click.argument("notion_api_auth_token")
@@ -32,7 +35,6 @@ from kindle2notion.reading import read_raw_clippings
     default=False,
     help='Set to True to separate each clipping into a separate quote block. Enabling this option significantly decreases upload speed.'
 )
-
 def main(
     notion_api_auth_token,
     notion_database_id,

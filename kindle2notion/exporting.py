@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple
 
 import notional
+from dateparser import parse
 from notional.blocks import Paragraph, TextObject, Quote
 from notional.query import TextCondition
 from notional.types import Date, ExternalFile, Number, RichText, Title
@@ -12,7 +13,7 @@ from requests import get
 # from more_itertools import grouper
 
 
-NO_COVER_IMG = "https://via.placeholder.com/150x200?text=No%20Cover"
+NO_COVER_IMG = "https://placehold.co/150x200?text=No%20Cover"
 
 
 def export_to_notion(
@@ -63,16 +64,16 @@ def _prepare_aggregated_text_for_one_book(
         date = each_clipping[3]
         is_note = each_clipping[4]
         if is_note == True:
-            aggregated_text += "> " + "NOTE: \n"
+            aggregated_text += "> " + "NOTA: \n"
 
         aggregated_text += text + "\n"
         if enable_location:
             if page != "":
-                aggregated_text += "Page: " + page + ", "
+                aggregated_text += "Página: " + page + ", "
             if location != "":
-                aggregated_text += "Location: " + location
+                aggregated_text += "Localização: " + location
         if enable_highlight_date and (date != ""):
-            aggregated_text += ", Date Added: " + date
+            aggregated_text += ", Data: " + date
 
         aggregated_text = aggregated_text.strip() + "\n\n"
         formatted_clippings.append(aggregated_text)
@@ -100,7 +101,7 @@ def _add_book_to_notion(
 
     query = (
         notion.databases.query(notion_database_id)
-        .filter(property="Title", rich_text=TextCondition(equals=title))
+        .filter(property="Original Name", rich_text=TextCondition(equals=title))
         .limit(1)
     )
     data = query.first()
@@ -127,6 +128,7 @@ def _add_book_to_notion(
             parent=notion.databases.retrieve(notion_database_id),
             properties={
                 "Title": Title[title],
+                "Original Name": RichText[title],
                 "Author": RichText[author],
                 "Highlights": Number[clippings_count],
                 "Last Highlighted": Date[last_date.isoformat()],

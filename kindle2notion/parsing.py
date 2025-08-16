@@ -102,6 +102,7 @@ def parse_raw_clippings_text(raw_clippings_text: str) -> Dict:
                 all_books, title, author, highlight, page, location, date, is_note
             )
         else:
+            print(each_raw_clipping)
             passed_clippings_count += 1
 
     print(f"× Passed {passed_clippings_count} bookmarks or unsupported clippings.\n")
@@ -120,7 +121,7 @@ def _parse_author_and_title(raw_clipping_list: List) -> Tuple[str, str]:
 
 
 def _parse_page_location_date_and_note(
-    raw_clipping_list: List,
+        raw_clipping_list: List,
 ) -> Tuple[str, str, str, bool]:
     second_line = raw_clipping_list[1]
     second_line_as_list = second_line.strip().split(" | ")
@@ -129,19 +130,48 @@ def _parse_page_location_date_and_note(
 
     for element in second_line_as_list:
         element = element.lower()
-        if "note" in element:
+        if "nota" in element or "note" in element:
             is_note = True
-        if "page" in element:
-            page = element[element.find("page") :].replace("page", "").strip()
-        if "location" in element:
-            location = (
-                element[element.find("location") :].replace("location", "").strip()
-            )
-        if "added on" in element:
-            date = parse(
-                element[element.find("added on") :].replace("added on", "").strip()
-            )
-            date = date.strftime("%A, %d %B %Y %I:%M:%S %p")
+
+        # Handle page in both formats
+        if "página" in element:
+            page = element[element.find("página"):].replace("página", "").strip()
+        elif "page" in element:
+            page = element[element.find("page"):].replace("page", "").strip()
+
+        # Handle location/position in both formats
+        if "posição" in element:
+            location = element[element.find("posição"):].replace("posição", "").strip()
+        elif "location" in element:
+            location = element[element.find("location"):].replace("location", "").strip()
+
+        # Handle date in both formats
+        if "adicionado:" in element:
+            date_str = element[element.find("adicionado:"):].replace("adicionado: ", "").strip()
+            try:
+                date = parse(date_str)
+                date = date.strftime("%A, %d %B %Y %I:%M:%S %p")
+            except:
+                date = date_str
+        elif "added on" in element:
+            date_str = element[element.find("added on"):].replace("added on", "").strip()
+            try:
+                date = parse(date_str)
+                date = date.strftime("%A, %d %B %Y %I:%M:%S %p")
+            except:
+                date = date_str
+
+        # Handle highlight format: "seu destaque ou posição 338-340"
+        if "seu destaque" in element and "posição" in element:
+            pos_index = element.find("posição")
+            if pos_index > 0:
+                location = element[pos_index:].replace("posição", "").strip()
+
+        # Handle highlight format: "seu destaque na página 43 | posição 323-325"
+        if "seu destaque na página" in element:
+            page_index = element.find("página")
+            if page_index > 0:
+                page = element[page_index:].replace("página", "").strip()
 
     return page, location, date, is_note
 
@@ -176,7 +206,7 @@ def _parse_raw_author_and_title(raw_clipping_list: List) -> Tuple[str, str]:
                 f"{title} - No author found. You can manually add the author in the Notion database."
             )
 
-    title = raw_clipping_list[0].replace(author, "").strip().replace(" ()", "")
+    title = raw_clipping_list[0].replace(f" - {author}", "").replace(author, "").strip().replace(" ()", "")
 
     return author, title
 
@@ -192,6 +222,13 @@ def _deal_with_exceptions_in_author_name(author: str, title: str) -> Tuple[str, 
 
     if "; " in author:
         authorList = author.split("; ")
+        author = ""
+        for ele in authorList:
+            author += " ".join(reversed(ele.split(", "))) + ", "
+        author = author.removesuffix(", ")
+
+    if ";" in author:
+        authorList = author.split(";")
         author = ""
         for ele in authorList:
             author += " ".join(reversed(ele.split(", "))) + ", "
