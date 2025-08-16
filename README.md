@@ -1,3 +1,10 @@
+# This is a modification of [Kindle2Notion by paperboi](https://github.com/paperboi/kindle2notion) for personal usage.
+
+## Usage
+
+`python __main__.py "<NOTION AUTH TOKEN>" "<NOTION DATABASE ID" "D:\documents\My Clippings.txt" --separate_blocks true`
+
+---
 
 <!-- PROJECT OVERVIEW -->
 <p align="center">
